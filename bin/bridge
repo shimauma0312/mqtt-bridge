@@ -1,0 +1,45 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+require __DIR__ . '/../vendor/autoload.php';
+
+$config = [
+    'mqtt' => [
+        'host'       => getenv('MQTT_HOST') ?: '127.0.0.1',
+        'port'       => (int) (getenv('MQTT_PORT') ?: 1883),
+        'client_id'  => getenv('MQTT_CLIENT_ID') ?: 'mqtt-bridge',
+        'topic'      => getenv('MQTT_TOPIC') ?: 'devices/#',
+        'keep_alive' => (int) (getenv('MQTT_KEEP_ALIVE') ?: 60),
+    ],
+    'redis' => [
+        'host' => getenv('REDIS_HOST') ?: '127.0.0.1',
+        'port' => (int) (getenv('REDIS_PORT') ?: 6379),
+    ],
+    'db' => [
+        'dsn'      => getenv('DB_DSN') ?: 'pgsql:host=127.0.0.1;port=5432;dbname=bridge',
+        'user'     => getenv('DB_USER') ?: 'bridge',
+        'password' => getenv('DB_PASSWORD') ?: '',
+    ],
+    'buffer' => [
+        'size'          => (int) (getenv('BUFFER_SIZE') ?: 50),
+        'flush_seconds' => (int) (getenv('BUFFER_FLUSH_SECONDS') ?: 5),
+    ],
+];
+
+$running = true;
+
+$stop = static function (int $signo) use (&$running): void {
+    fwrite(STDERR, "signal {$signo} received, shutting down\n");
+    $running = false;
+};
+pcntl_signal(SIGTERM, $stop);
+pcntl_signal(SIGINT, $stop);
+
+// TODO: Worker を組み立ててループを回す
+// $worker = new MqttBridge\Worker($config);
+// $worker->run(fn (): bool => $running);
+// $worker->shutdown(); // バッファをフラッシュしてから切断
+
+exit(0);
