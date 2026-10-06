@@ -10,17 +10,21 @@ $config = [
         'host'       => getenv('MQTT_HOST') ?: '127.0.0.1',
         'port'       => (int) (getenv('MQTT_PORT') ?: 1883),
         'client_id'  => getenv('MQTT_CLIENT_ID') ?: 'mqtt-bridge',
-        'topic'      => getenv('MQTT_TOPIC') ?: 'devices/#',
         'keep_alive' => (int) (getenv('MQTT_KEEP_ALIVE') ?: 60),
     ],
-    'redis' => [
-        'host' => getenv('REDIS_HOST') ?: '127.0.0.1',
-        'port' => (int) (getenv('REDIS_PORT') ?: 6379),
+    'labeling' => [
+        // 購読トピックはこの書式から導出する（{label}/{device_id} → +/+）
+        'topic_format' => getenv('BRIDGE_TOPIC_FORMAT') ?: '{label}/{device_id}',
+        'time_field'   => getenv('BRIDGE_TIME_FIELD') ?: 'ts',
     ],
     'db' => [
-        'dsn'      => getenv('DB_DSN') ?: 'pgsql:host=127.0.0.1;port=5432;dbname=bridge',
+        'dsn'      => getenv('DB_DSN') ?: 'mysql:host=127.0.0.1;port=3306;dbname=bridge;charset=utf8mb4',
         'user'     => getenv('DB_USER') ?: 'bridge',
         'password' => getenv('DB_PASSWORD') ?: '',
+        'table'    => getenv('BRIDGE_DB_TABLE') ?: 'records',
+        // "論理名=実カラム名" のカンマ区切り。起動時に識別子として検証する
+        'columns'  => getenv('BRIDGE_DB_COLUMNS')
+            ?: 'device_id=device_id,label=label,recorded_at=recorded_at,payload=payload',
     ],
     'buffer' => [
         'size'          => (int) (getenv('BUFFER_SIZE') ?: 50),
