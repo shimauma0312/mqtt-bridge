@@ -5,36 +5,67 @@ declare(strict_types=1);
 
 require __DIR__ . '/../vendor/autoload.php';
 
+$errors = [];
+
+$env = static function (string $name) use (&$errors): string {
+    $v = getenv($name);
+    if ($v === false) {
+        $errors[] = "missing env: {$name}";
+        return '';
+    }
+    return $v;
+};
+
+$envInt = static function (string $name) use (&$errors): int {
+    $v = getenv($name);
+    if ($v === false) {
+        $errors[] = "missing env: {$name}";
+        return 0;
+    }
+    $i = filter_var($v, FILTER_VALIDATE_INT);
+    if ($i === false) {
+        $errors[] = "invalid int env: {$name}={$v}";
+        return 0;
+    }
+    return $i;
+};
+
 $config = [
     'mqtt' => [
-        'host'       => getenv('MQTT_HOST') ?: '127.0.0.1',
-        'port'       => (int) (getenv('MQTT_PORT') ?: 1883),
-        'client_id'  => getenv('MQTT_CLIENT_ID') ?: 'mqtt-bridge',
-        'keep_alive' => (int) (getenv('MQTT_KEEP_ALIVE') ?: 60),
+        'host'       => $env('MQTT_HOST'),
+        'port'       => $envInt('MQTT_PORT'),
+        'client_id'  => $env('MQTT_CLIENT_ID'),
+        'keep_alive' => $envInt('MQTT_KEEP_ALIVE'),
     ],
     'labeling' => [
         // 購読トピックはこの書式から導出する（{label}/{device_id} → +/+）
-        'topic_format' => getenv('BRIDGE_TOPIC_FORMAT') ?: '{label}/{device_id}',
-        'time_field'   => getenv('BRIDGE_TIME_FIELD') ?: 'ts',
+        'topic_format' => $env('BRIDGE_TOPIC_FORMAT'),
+        'time_field'   => $env('BRIDGE_TIME_FIELD'),
     ],
     'db' => [
-        'dsn'      => getenv('DB_DSN') ?: 'mysql:host=127.0.0.1;port=3306;dbname=bridge;charset=utf8mb4',
-        'user'     => getenv('DB_USER') ?: 'bridge',
-        'password' => getenv('DB_PASSWORD') ?: '',
-        'table'    => getenv('BRIDGE_DB_TABLE') ?: 'records',
+        'dsn'      => $env('DB_DSN'),
+        'user'     => $env('DB_USER'),
+        'password' => $env('DB_PASSWORD'),
+        'table'    => $env('BRIDGE_DB_TABLE'),
         // "論理名=実カラム名" のカンマ区切り。起動時に識別子として検証する
-        'columns'  => getenv('BRIDGE_DB_COLUMNS')
-            ?: 'device_id=device_id,label=label,recorded_at=recorded_at,payload=payload',
+        'columns'  => $env('BRIDGE_DB_COLUMNS'),
     ],
     'buffer' => [
-        'size'          => (int) (getenv('BUFFER_SIZE') ?: 50),
-        'flush_seconds' => (int) (getenv('BUFFER_FLUSH_SECONDS') ?: 5),
+        'size'          => $envInt('BUFFER_SIZE'),
+        'flush_seconds' => $envInt('BUFFER_FLUSH_SECONDS'),
     ],
 ];
 
+if ($errors !== []) {
+    foreach ($errors as $e) {
+        fwrite(STDERR, $e . "\n");
+    }
+    exit(1);
+}
+
 $running = true;
 
-$stop = static function (int $signo) use (&$running): void {
+$stop = function (int $signo) use (&$running): void {
     fwrite(STDERR, "signal {$signo} received, shutting down\n");
     $running = false;
 };
