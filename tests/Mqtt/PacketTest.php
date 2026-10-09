@@ -13,4 +13,10 @@ final class PacketTest extends TestCase
     {
         self::assertSame("\x00", Packet::encodeRemainingLength(0));
     }
+
+    public function testEncodeRemainingLength128(): void
+    {
+        self::assertSame('8001', bin2hex(Packet::encodeRemainingLength(128)));
+    }
+
 }

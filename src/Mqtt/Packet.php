@@ -12,6 +12,8 @@ final class Packet
 
         do {
             $byte = $length & 0x7F; // 0111 1111
+            $length >>= 7;
+            
             $out .= chr($byte);
 
         } while ($length > 0);
