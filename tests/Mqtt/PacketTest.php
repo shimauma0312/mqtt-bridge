@@ -33,4 +33,12 @@ final class PacketTest extends TestCase
     {
         self::assertSame('808001', bin2hex(Packet::encodeRemainingLength(16384)));
     }
+
+    public function testEncodeRemainingLength268435455(): void
+    {
+        // 268435455 = 0x0FFFFFFF（28ビット全部 1）→ 0xFF 0xFF 0xFF 0x7F
+        self::assertSame('ffffff7f', bin2hex(Packet::encodeRemainingLength(268_435_455)));
+    }
+
+
 }
