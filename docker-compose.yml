@@ -1,0 +1,12 @@
+services:
+  php:
+    build: ./docker/php
+    # Run as the host user so vendor/ is not owned by root
+    user: "${UID:-1000}:${GID:-1000}"
+    environment:
+      COMPOSER_HOME: /tmp/composer
+    volumes:
+      - ./:/app
+    # Keep the container running so we can exec into it
+    command: sleep infinity
+    init: true

@@ -1,2 +1,3 @@
 j_*
 vendor/
+.phpunit.result.cache
