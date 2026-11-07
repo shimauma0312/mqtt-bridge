@@ -40,5 +40,19 @@ final class PacketTest extends TestCase
         self::assertSame('ffffff7f', bin2hex(Packet::encodeRemainingLength(268_435_455)));
     }
 
+        public function testEncodeRemainingLengthRejectsNegative(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        Packet::encodeRemainingLength(-1);
+    }
+
+    public function testEncodeRemainingLengthRejectsTooLarge(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        Packet::encodeRemainingLength(268_435_456);
+    }
+
 
 }

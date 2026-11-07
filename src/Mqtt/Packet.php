@@ -11,8 +11,18 @@ final class Packet
 
     private const int CONTINUATION_BIT = 0x80;
 
+    private const int MAX_REMAINING_LENGTH = 268_435_455;
+
+
     public static function encodeRemainingLength(int $length): string 
     {
+        
+        if ($length < 0 || $length > self::MAX_REMAINING_LENGTH) {
+            throw new \InvalidArgumentException(
+                "Remaining Length out of range: {$length}"
+            );
+        }
+
         $out = '';
 
         do {
