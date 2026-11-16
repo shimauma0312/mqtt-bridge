@@ -40,4 +40,18 @@ final class Packet
         return $out;
 
     }
+
+    public static function decodeRemainingLength(string $bytes, int $offset = 0): array
+    {
+        $value = 0;
+        $i = 0;
+        do {
+            $byte = ord($bytes[$offset + $i]);
+            $value += ($byte & self::VALUE_MASK) << (7 * $i);
+            $i++;
+        } while (($byte & self::CONTINUATION_BIT) !== 0);
+
+        return [$value, $i];
+    }
+
 }

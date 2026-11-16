@@ -54,5 +54,46 @@ final class PacketTest extends TestCase
         Packet::encodeRemainingLength(268_435_456);
     }
 
+    public function testDecodeRemainingLengthZero(): void
+    {
+        self::assertSame([0, 1], Packet::decodeRemainingLength("\x00"));
+    }
+
+    public function testDecodeRemainingLength127(): void
+    {
+        self::assertSame([127, 1], Packet::decodeRemainingLength("\x7f"));
+    }
+
+    public function testDecodeRemainingLength128(): void
+    {
+        self::assertSame([128, 2], Packet::decodeRemainingLength("\x80\x01"));
+    }
+
+    public function testDecodeRemainingLength16383(): void
+    {
+        self::assertSame([16383, 2], Packet::decodeRemainingLength("\xff\x7f"));
+    }
+
+    public function testDecodeRemainingLength16384(): void
+    {
+        self::assertSame([16384, 3], Packet::decodeRemainingLength("\x80\x80\x01"));
+    }
+
+    public function testDecodeRemainingLengthMax(): void
+    {
+        self::assertSame([268435455, 4], Packet::decodeRemainingLength("\xff\xff\xff\x7f"));
+    }
+
+    public function testDecodeRemainingLengthWithOffset(): void
+    {
+        self::assertSame([300, 2], Packet::decodeRemainingLength("\x30\xac\x02", 1));
+    }
+
+    public function testDecodeRemainingLengthIgnoresTrailingBytes(): void
+    {
+        self::assertSame([5, 1], Packet::decodeRemainingLength("\x05\xff"));
+    }
+
+
 
 }
